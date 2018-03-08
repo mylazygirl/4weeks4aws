@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 4weeks4aws week1 Stack
+Parameters:
+  BucketName:
+    Description: The name of the bucket which will be created
+    Type: String
+
+Resources:
+  StaticS3:
+    Type: "AWS::S3::Bucket"
+    Properties: 
+      BucketName: !Ref BucketName
+      WebsiteConfiguration:
+        IndexDocument: index.html
+
+  StaticS3Policy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties: 
+      Bucket: 
+        Ref: "StaticS3"
+      PolicyDocument: 
+        Statement: 
+          - 
+            Action: 
+              - "s3:GetObject"
+            Effect: "Allow"
+            Resource: 
+              !Sub 'arn:aws:s3:::${StaticS3}/*'
+            Principal: "*"
+            Condition: 
+              StringLike: 
+                aws:Referer:
+                  - !Sub 'https://${StaticS3}/*'
+                  - !Sub 'http://${StaticS3}/*'

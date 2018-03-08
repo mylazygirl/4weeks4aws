@@ -1,0 +1,13 @@
+- name: week1 homework
+  cloudformation:
+    stack_name: "setup-static-website-{{version}}"
+    state: "present"
+    region: "{{region}}"
+    disable_rollback: true
+    template: "cloudformation/week1/week1-stack.yml"
+    stack_policy: "policies/cloudformation/stack-policy.json"
+    template_parameters:
+      BucketName: "{{s3_bucket}}"
+    tags:
+      project: "4weeks4aws"
+      app: "week1"
