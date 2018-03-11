@@ -4,20 +4,47 @@ Parameters:
   BucketName:
     Description: The name of the bucket which will be created
     Type: String
-
+  HostedZoneName:
+    Description: The name of the hosted zone
+    Type: String
+Mappings:
+  RegionMap:
+    us-east-1:
+      S3hostedzoneID: Z3AQBSTGFYJSTF
+      websiteendpoint: s3-website-us-east-1.amazonaws.com
+    us-west-1:
+      S3hostedzoneID: Z2F56UZL2M1ACD
+      websiteendpoint: s3-website-us-west-1.amazonaws.com
+    us-west-2:
+      S3hostedzoneID: Z3BJ6K6RIION7M
+      websiteendpoint: s3-website-us-west-2.amazonaws.com
+    eu-west-1:
+      S3hostedzoneID: Z1BKCTXD74EZPE
+      websiteendpoint: s3-website-eu-west-1.amazonaws.com
+    ap-southeast-1:
+      S3hostedzoneID: Z3O0J2DXBE1FTB
+      websiteendpoint: s3-website-ap-southeast-1.amazonaws.com
+    ap-southeast-2:
+      S3hostedzoneID: Z1WCIGYICN2BYD
+      websiteendpoint: s3-website-ap-southeast-2.amazonaws.com
+    ap-northeast-1:
+      S3hostedzoneID: Z2M4EHUR26P7ZW
+      websiteendpoint: s3-website-ap-northeast-1.amazonaws.com
+    sa-east-1:
+      S3hostedzoneID: Z31GFT0UA1I2HV
+      websiteendpoint: s3-website-sa-east-1.amazonaws.com
 Resources:
-  StaticS3:
+  StaticWebS3:
     Type: "AWS::S3::Bucket"
     Properties: 
       BucketName: !Ref BucketName
       WebsiteConfiguration:
         IndexDocument: index.html
-
-  StaticS3Policy:
+  StaticWebS3Policy:
     Type: "AWS::S3::BucketPolicy"
     Properties: 
       Bucket: 
-        Ref: "StaticS3"
+        Ref: "StaticWebS3"
       PolicyDocument: 
         Statement: 
           - 
@@ -25,10 +52,15 @@ Resources:
               - "s3:GetObject"
             Effect: "Allow"
             Resource: 
-              !Sub 'arn:aws:s3:::${StaticS3}/*'
+              !Sub 'arn:aws:s3:::${StaticWebS3}/*'
             Principal: "*"
-            Condition: 
-              StringLike: 
-                aws:Referer:
-                  - !Sub 'https://${StaticS3}/*'
-                  - !Sub 'http://${StaticS3}/*'
+  Route53RecordSet:
+    Type: "AWS::Route53::RecordSet"
+    Properties: 
+      Name: !Sub '${StaticWebS3}.'
+      Type: A
+      HostedZoneName: !Sub '${HostedZoneName}.'
+      AliasTarget: 
+        HostedZoneId: !FindInMap [ RegionMap, !Ref 'AWS::Region', S3hostedzoneID ]
+        DNSName: !FindInMap [ RegionMap, !Ref 'AWS::Region', websiteendpoint ]
+        EvaluateTargetHealth: false

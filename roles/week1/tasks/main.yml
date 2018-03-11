@@ -8,6 +8,7 @@
     stack_policy: "policies/cloudformation/stack-policy.json"
     template_parameters:
       BucketName: "{{s3_bucket}}"
+      HostedZoneName: "{{hosted_zone_name}}"
     tags:
       project: "4weeks4aws"
       app: "week1"
