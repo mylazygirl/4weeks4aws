@@ -1,6 +1,6 @@
 ---
-- hosts: week1
+- hosts: week1a
   connection: local
   gather_facts: False
   roles: 
-    - week1
+    - week1a

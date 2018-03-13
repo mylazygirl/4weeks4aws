@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 4weeks4aws week1 Stack
+Description: 4weeks4aws week1a Stack
 Parameters:
   BucketName:
     Description: The name of the bucket which will be created
@@ -64,35 +64,3 @@ Resources:
         HostedZoneId: !FindInMap [ RegionMap, !Ref 'AWS::Region', S3hostedzoneID ]
         DNSName: !FindInMap [ RegionMap, !Ref 'AWS::Region', websiteendpoint ]
         EvaluateTargetHealth: false
-  CloudFrontOriginAccessIdentity:
-    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
-    Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: !Sub 'origin-access-identity-${StaticWebS3}'
-  CloudFrontDistribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Origins:
-        - DomainName: !GetAtt StaticWebS3.DomainName
-          Id: !Sub 'S3-${StaticWebS3}'
-          S3OriginConfig:
-            OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}'
-        Enabled: 'true'
-        DefaultRootObject: index.html
-        Aliases:
-        - !Ref StaticWebS3
-        DefaultCacheBehavior:
-          AllowedMethods:
-          - GET
-          - HEAD
-          TargetOriginId: !Sub 'S3-${StaticWebS3}'
-          ForwardedValues:
-            QueryString: false
-            Cookies:
-              Forward: none
-          ViewerProtocolPolicy: allow-all
-        PriceClass: PriceClass_All
-        ViewerCertificate:
-          CloudFrontDefaultCertificate: 'true'
-

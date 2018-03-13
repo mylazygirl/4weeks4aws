@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 4weeks4aws week1b Stack
+Parameters:
+  BucketName:
+    Description: The name of the bucket which will be created
+    Type: String
+  HostedZoneName:
+    Description: The name of the hosted zone
+    Type: String
+  CertificateArn:
+    Description: The arn of the certificate you have all ready request
+    Type: String
+Resources:
+  StaticWebS3:
+    Type: "AWS::S3::Bucket"
+    Properties: 
+      BucketName: !Ref BucketName
+      WebsiteConfiguration:
+        IndexDocument: index.html
+  CloudFrontOriginAccessIdentity:
+    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub 'origin-access-identity-${StaticWebS3}'
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+        - DomainName: !GetAtt StaticWebS3.DomainName
+          Id: !Sub 'S3-${StaticWebS3}'
+          S3OriginConfig:
+            OriginAccessIdentity: !Sub 'origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}'
+        Enabled: 'true'
+        DefaultRootObject: index.html
+        Aliases:
+        - !Ref StaticWebS3
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - GET
+          - HEAD
+          TargetOriginId: !Sub 'S3-${StaticWebS3}'
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        PriceClass: PriceClass_All
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+  StaticWebS3Policy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties: 
+      Bucket: 
+        Ref: "StaticWebS3"
+      PolicyDocument: 
+        Statement: 
+          - 
+            Action: 
+              - "s3:GetObject"
+            Effect: "Allow"
+            Resource: !Sub 'arn:aws:s3:::${StaticWebS3}/*'
+            Principal:
+              AWS: !Sub 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CloudFrontOriginAccessIdentity}'
+  Route53RecordSet:
+    Type: "AWS::Route53::RecordSet"
+    Properties: 
+      Name: !Sub '${StaticWebS3}.'
+      Type: A
+      HostedZoneName: !Sub '${HostedZoneName}.'
+      AliasTarget: 
+        HostedZoneId: Z2FDTNDATAQYW2
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        EvaluateTargetHealth: false
