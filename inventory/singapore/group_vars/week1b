@@ -1,4 +1,0 @@
-s3_bucket: yyy.xxx.com
-hosted_zone_name: xxx.com
-certificate_arn: arn:aws:acm:xxxxxxx
-version: 1
