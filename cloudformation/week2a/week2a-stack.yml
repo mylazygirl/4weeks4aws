@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: 4weeks4aws week2a
+Parameters:
+  HostedZoneName:
+    Description: The name of the hosted zone
+    Type: String
+  AMI:
+    Description: The ami which ec2 will use
+    Type: String
+  InstanceType:
+    Description: The type of ec2 instance
+    Type: String
+  KeyName:
+    Description: The name of the Amazon EC2 key pair
+    Type: String
+  BlockDeviceName: 
+    Description: The name of the device within Amazon EC2
+    Type: String
+  EbsVolumeType:
+    Description: The volume type
+    Type: String
+  EbsVolumeSize:
+    Description: The volume size, in gibibytes (GiB)
+    Type: String
+  VpcId: 
+    Description: The physical ID of the VPC
+    Type: String
+Resources:
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: For Jenkins EC2 Instance
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '8080'
+        ToPort: '8080'
+        CidrIp: 202.66.38.130/32
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: 202.66.38.130/32
+  JenkinsEC2Instance: 
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: !Ref AMI
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      BlockDeviceMappings:
+        -
+          DeviceName: !Ref BlockDeviceName
+          Ebs:
+            VolumeType: !Ref EbsVolumeType
+            VolumeSize: !Ref EbsVolumeSize
+      SecurityGroupIds:
+        - !GetAtt EC2SecurityGroup.GroupId
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
+            echo deb https://pkg.jenkins.io/debian-stable binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list
+            sudo apt-get update -y
+            sudo apt-get install jenkins -y
+            sudo systemctl start jenkins
+            sudo systemctl status jenkins
+            sudo ufw allow OpenSSH
+            sudo ufw enable
+            sudo ufw allow 8080
+            sudo ufw status
+  JenkinsRecordset:
+    Type: "AWS::Route53::RecordSet"
+    Properties: 
+      Name: !Sub 'jenkins.${HostedZoneName}.'
+      Type: CNAME
+      HostedZoneName: !Sub '${HostedZoneName}.'
+      TTL: 300
+      ResourceRecords:
+      - !GetAtt JenkinsEC2Instance.PublicDnsName

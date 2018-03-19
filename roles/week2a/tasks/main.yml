@@ -1,0 +1,20 @@
+- name: week2a homework
+  cloudformation:
+    stack_name: "week2a-{{version}}"
+    state: "present"
+    region: "{{region}}"
+    disable_rollback: true
+    template: "cloudformation/week2a/week2a-stack.yml"
+    stack_policy: "policies/cloudformation/stack-policy.json"
+    template_parameters:
+      HostedZoneName: "{{hosted_zone_name}}"
+      AMI: "{{ami}}"
+      InstanceType: "{{instance_type}}"
+      KeyName: "{{key_name}}"
+      BlockDeviceName: "{{block_device_name}}"
+      EbsVolumeType: "{{ebs_volume_type}}"
+      EbsVolumeSize: "{{ebs_volume_size}}"
+      VpcId: "{{vpc_id}}"
+    tags:
+      project: "4weeks4aws"
+      app: "week2a"

@@ -39,6 +39,7 @@ Resources:
           AllowedMethods:
           - GET
           - HEAD
+          Compress: true
           TargetOriginId: !Sub 'S3-${StaticWebS3}'
           ForwardedValues:
             QueryString: false
